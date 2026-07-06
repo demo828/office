@@ -166,6 +166,24 @@
     border-top:1px solid var(--govuk-line); margin-top:60px; padding:30px 20px; font-size:15px; color:#505a5f;
   }
   .visually-hidden{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0);}
+
+  .print-only{ display:none; }
+
+  @media print{
+    .phase-banner, header.top, .action-row, footer, .map-container, .confirm-banner, .step-indicator{
+      display:none !important;
+    }
+    body{ font-size:14pt; }
+    .office-card{ border:1px solid #000; padding:16px; }
+    .print-only{
+      display:block; margin-top:16px; padding-top:12px; border-top:1px solid #999;
+      font-size:11pt; color:#333;
+    }
+    #result-heading::before{
+      content:"Find my Probation Office — confirmation slip";
+      display:block; font-size:12pt; font-weight:400; color:#505a5f; margin-bottom:4px;
+    }
+  }
 </style>
 </head>
 <body>
@@ -283,12 +301,13 @@
         <div class="icon">&#9888;</div>
         <div><strong>Bring with you:</strong> photo ID and your appointment letter or court paperwork.</div>
       </div>
+      <p id="print-timestamp" class="print-only"></p>
     </div>
 
     <div class="action-row">
-      <button class="btn-primary" onclick="alert('Prototype: this would open turn-by-turn directions.')">Get directions</button>
+      <button class="btn-primary" onclick="getDirections()">Get directions</button>
       <button class="btn-secondary" onclick="resetSearch()">Start over</button>
-      <button class="link-button" onclick="alert('Prototype: this would download/print a confirmation slip.')">Print confirmation</button>
+      <button class="link-button" onclick="printConfirmation()">Print confirmation</button>
     </div>
   </div>
 </main>
@@ -318,6 +337,8 @@
 
   let activeTab = 'postcode';
   let leafletMap = null;
+  let currentOffice = null;
+  let currentPostcode = '';
   let leafletMarker = null;
 
   function showOfficeOnMap(lat, lng, label){
@@ -541,12 +562,34 @@
       document.getElementById('office-area').textContent = office.authority;
       document.getElementById('map-caption').textContent = office.name + ' — ' + postcodeToLookup.toUpperCase();
 
+      currentOffice = office;
+      currentPostcode = postcodeToLookup.toUpperCase();
+
       searchView.style.display = 'none';
       resultView.classList.add('show');
       showOfficeOnMap(office.lat, office.lng, office.name);
       window.scrollTo(0,0);
     }, 900); // simulated sub-2-second lookup
   });
+
+  // Opens turn-by-turn directions to the office in the user's default maps
+  // app (Google Maps on mobile deep-links into the native app automatically).
+  function getDirections(){
+    if(!currentOffice) return;
+    const url = 'https://www.google.com/maps/dir/?api=1&destination=' + currentOffice.lat + ',' + currentOffice.lng;
+    window.open(url, '_blank', 'noopener');
+  }
+
+  // Triggers the browser print dialog. A print-specific stylesheet (see
+  // @media print below) hides navigation, the map and buttons, leaving a
+  // clean confirmation slip the user can print or save as a PDF.
+  function printConfirmation(){
+    if(!currentOffice) return;
+    document.getElementById('print-timestamp').textContent =
+      'Generated ' + new Date().toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' }) +
+      ' for postcode ' + currentPostcode;
+    window.print();
+  }
 
   function resetSearch(){
     resultView.classList.remove('show');
