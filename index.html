@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>England & Wales Probation & Delius Tools</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<style>
+  :root{
+    --govuk-text:#0b0c0c;
+    --govuk-blue:#1d70b8;
+    --govuk-dark-blue:#003078;
+    --govuk-green:#00703c;
+    --govuk-yellow:#ffdd00;
+    --govuk-red:#d4351c;
+    --govuk-grey:#f8f8f8;
+    --govuk-line:#d9d9d9;
+    --govuk-mid-grey:#b1b4b6;
+    --focus:#ffdd00;
+    --font: "GDS Transport", Arial, "Helvetica Neue", Helvetica, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:var(--font); color:var(--govuk-text);
+    background:#ffffff; font-size:19px; line-height:1.4;
+  }
+  a{color:var(--govuk-blue);}
+  .phase-banner{
+    background:var(--govuk-grey); border-bottom:1px solid var(--govuk-line);
+    padding:10px 20px; font-size:16px; color:#4c4c4c;
+  }
+  .phase-banner strong{
+    background:var(--govuk-blue); color:#fff; text-transform:uppercase;
+    font-size:12px; padding:2px 8px; border-radius:3px; margin-right:8px; letter-spacing:.5px;
+  }
+  header.top{
+    background:#ffffff; color:var(--govuk-text); padding:16px 20px 0 20px;
+    border-bottom:4px solid var(--govuk-blue);
+  }
+  .header-brand{
+    display:flex; align-items:center; gap:10px; margin-bottom:16px;
+  }
+  header.top .crest{
+    width:30px; height:30px; border:2px solid var(--govuk-blue); border-radius:50%; color:var(--govuk-blue);
+    display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700;
+  }
+  header.top .service-name{font-weight:700; font-size:19px;}
+  header.top .service-sub{font-size:15px; color:#505a5f; margin-left:auto;}
+
+  /* Primary Navigation Bar */
+  .primary-nav{
+    display:flex; gap:4px; margin-bottom:-4px;
+  }
+  .nav-item{
+    padding:12px 20px; font-size:18px; font-weight:700; background:#e5e8e8; color:var(--govuk-blue);
+    border:none; cursor:pointer; border-top-left-radius:4px; border-top-right-radius:4px;
+    font-family:var(--font);
+  }
+  .nav-item.active{
+    background:var(--govuk-blue); color:#ffffff;
+  }
+
+  .container{max-width:760px; margin:0 auto; padding:0 20px;}
+  .wide-container{max-width:960px; margin:0 auto; padding:0 20px;}
+
+  main{padding:30px 0 60px;}
+  h1{font-size:32px; margin:0 0 10px; font-weight:700; color:var(--govuk-text);}
+  h2{font-size:24px; margin:30px 0 10px; font-weight:700; color:var(--govuk-text);}
+  .lede{font-size:21px; color:#333; margin-bottom:25px;}
+
+  .step-indicator{font-size:16px; color:#505a5f; margin-bottom:6px; text-transform:uppercase; letter-spacing:.5px; font-weight:600;}
+
+  label{display:block; font-weight:700; margin-bottom:5px; font-size:19px;}
+  .hint{color:#505a5f; font-size:17px; margin-bottom:10px;}
+  input[type=text]{
+    width:100%; padding:10px 12px; font-size:19px; border:2px solid #565656;
+    border-radius:0; font-family:var(--font); background:#fff;
+  }
+  input[type=text]:focus{
+    outline:3px solid var(--focus); outline-offset:0; box-shadow: inset 0 0 0 2px var(--govuk-text);
+  }
+  .field-group{margin-bottom:22px; max-width:420px;}
+  .error-summary{
+    border:4px solid var(--govuk-red); padding:18px 20px; margin-bottom:30px; display:none; background:#fff;
+  }
+  .error-summary.show{display:block;}
+  .error-summary h2{color:var(--govuk-red); font-size:20px; margin:0 0 10px;}
+  .error-summary ul{margin:0; padding-left:20px;}
+  .error-summary a{color:var(--govuk-red); font-weight:600;}
+  .field-error{color:var(--govuk-red); font-weight:700; margin:4px 0 8px; display:none;}
+  .field-error.show{display:block;}
+  .field-group.has-error input{border-color:var(--govuk-red); border-width:3px;}
+  .field-group.has-error label{color:var(--govuk-red);}
+
+  .btn-primary{
+    background:var(--govuk-green); color:#fff; border:2px solid transparent;
+    font-size:19px; font-weight:700; padding:12px 26px; cursor:pointer;
+    box-shadow:0 3px 0 #002d18; border-radius:0;
+  }
+  .btn-primary:hover{background:#005a30;}
+  .btn-primary:active{box-shadow:none; transform:translateY(3px);}
+  .btn-primary:focus{outline:3px solid var(--focus); outline-offset:0; box-shadow:0 3px 0 #002d18, 0 0 0 3px var(--govuk-text) inset;}
+  .btn-secondary{
+    background:#f3f2f1; color:var(--govuk-text); border:2px solid transparent;
+    font-size:19px; font-weight:700; padding:12px 26px; cursor:pointer;
+    box-shadow:0 3px 0 #929191; margin-left:12px;
+  }
+
+  .loading-panel{display:none; align-items:center; gap:16px; padding:20px 0; max-width:500px;}
+  .loading-panel.show{display:flex;}
+  .spinner{
+    width:32px; height:32px; border:4px solid var(--govuk-grey); border-top:4px solid var(--govuk-blue);
+    border-radius:50%; animation:spin 0.9s linear infinite; flex-shrink:0;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .loading-panel p{margin:0; font-weight:600;}
+
+  .result-panel{display:none;}
+  .result-panel.show{display:block;}
+  .confirm-banner{
+    background:#00703c; color:#fff; padding:14px 20px; margin-bottom:24px; border-radius:2px;
+    display:flex; align-items:center; gap:12px; font-weight:700; font-size:19px;
+  }
+  .confirm-banner .tick{
+    width:26px; height:26px; border-radius:50%; background:#fff; color:#00703c;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:16px;
+  }
+  .office-card{
+    border:1px solid var(--govuk-line); border-left:6px solid var(--govuk-blue);
+    padding:24px; margin-bottom:20px; background:#fff;
+  }
+  .office-card h3{margin:0 0 4px; font-size:24px; color:var(--govuk-text);}
+  .office-card .distance-tag{
+    display:inline-block; background:var(--govuk-grey); color:#3d3d3d;
+    font-size:14px; font-weight:700; padding:3px 10px; margin-bottom:14px; text-transform:uppercase;
+    border:1px solid var(--govuk-line);
+  }
+  .office-detail-row{display:flex; gap:14px; margin-bottom:12px; align-items:flex-start;}
+  .office-detail-row .icon{
+    width:22px; text-align:center; flex-shrink:0; color:var(--govuk-blue); font-weight:700;
+  }
+  .office-detail-row div{line-height:1.45;}
+  .office-detail-row a{font-weight:700;}
+  .map-container{
+    width:100%; height:260px; border:1px solid var(--govuk-line); margin-bottom:20px;
+    position:relative; background:#eef3ef;
+  }
+  #office-map{ width:100%; height:100%; }
+  .map-caption{
+    position:absolute; bottom:10px; left:10px; background:#fff; padding:4px 10px;
+    font-size:14px; border:1px solid var(--govuk-line); z-index:1000; border-radius:2px;
+  }
+  .action-row{margin-top:26px; display:flex; gap:12px; flex-wrap:wrap;}
+  .link-button{
+    background:none; border:none; color:var(--govuk-blue); text-decoration:underline;
+    font-size:19px; cursor:pointer; padding:12px 0; font-family:var(--font);
+  }
+
+  .not-found-panel{display:none; border-left:6px solid var(--govuk-red); padding:16px 20px; background:#fdf3f2;}
+  .not-found-panel.show{display:block;}
+  .not-found-panel h2{color:var(--govuk-red); margin-top:0;}
+
+  .privacy-note{
+    background:var(--govuk-grey); padding:16px 20px; font-size:16px; color:#333; margin-top:40px;
+    border-left:6px solid var(--govuk-blue);
+  }
+  .coverage-note{
+    background:#f2f7fb; padding:12px 20px; font-size:15px; color:#1d3f5e; margin-bottom:20px;
+    border-left:4px solid var(--govuk-blue);
+  }
+  .redirect-notice{
+    display:none; background:#fff7e6; padding:14px 20px; font-size:16px; color:#4a3800; margin-bottom:20px;
+    border-left:6px solid #f47738;
+  }
+  .redirect-notice.show{ display:block; }
+  .privacy-note strong{display:block; margin-bottom:4px;}
+
+  .tabs{display:flex; gap:0; margin-bottom:6px; max-width:420px;}
+  .tab-btn{
+    flex:1; padding:10px 8px; text-align:center; background:var(--govuk-grey); border:1px solid var(--govuk-line);
+    border-bottom:none; cursor:pointer; font-weight:700; font-family:var(--font); font-size:16px; color:#333;
+  }
+  .tab-btn.active{background:#fff; border-bottom:2px solid #fff; margin-bottom:-2px; color:var(--govuk-text); border-top:3px solid var(--govuk-blue);}
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+
+  /* Tool Containers */
+  .tool-view{ display:none; }
+  .tool-view.active{ display:block; }
+
+  /* Delius Tool Specific Styling */
+  .delius-box{
+    background:#f0f4f8; border:2px solid var(--govuk-blue); padding:20px; margin-top:15px;
+  }
+  .delius-code{
+    font-family: monospace; background:#e1e8f0; padding:2px 6px; font-weight:700; color:var(--govuk-dark-blue);
+  }
+
+  footer{
+    border-top:1px solid var(--govuk-line); margin-top:60px; padding:30px 20px; font-size:15px; color:#505a5f;
+  }
+  .visually-hidden{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0);}
+  .print-only{ display:none; }
+
+  @media print{
+    .phase-banner, header.top, .action-row, footer, .map-container, .confirm-banner, .step-indicator, .primary-nav{
+      display:none !important;
+    }
+    body{ font-size:14pt; }
+    .office-card, .delius-box{ border:1px solid #000; padding:16px; }
+    .print-only{
+      display:block; margin-top:16px; padding-top:12px; border-top:1px solid #999;
+      font-size:11pt; color:#333;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="phase-banner">
+  <div class="container" style="padding:0;">
+    <strong>Prototype</strong> Working design prototype for Case Administrators across England &amp; Wales.
+  </div>
+</div>
+
+<header class="top">
+  <div class="header-brand">
+    <div class="crest">⚖</div>
+    <div class="service-name">HMPPS England &amp; Wales Administration Hub</div>
+    <div class="service-sub">England &amp; Wales</div>
+  </div>
+  <nav class="primary-nav">
+    <button class="nav-item active" id="nav-locator" onclick="switchTool('locator')">Probation Office Locator</button>
+    <button class="nav-item" id="nav-delius" onclick="switchTool('delius')">Delius NSI Team Finder</button>
+  </nav>
+</header>
+
+<main>
+  <!-- ==================== TOOL 1: PROBATION OFFICE LOCATOR ==================== -->
+  <div id="tool-locator" class="tool-view active">
+    <div class="container" id="search-view">
+      <div class="step-indicator">Step 1 of 2</div>
+      <h1>Find your Probation Office</h1>
+      <p class="lede">Search by postcode or full address to find the probation office and Probation Delivery Unit (PDU) responsible for your case across England &amp; Wales.</p>
+
+      <div class="coverage-note">This tool covers all Probation Regions and Delivery Units across <strong>England and Wales</strong>.</div>
+
+      <div class="error-summary" id="error-summary" role="alert" tabindex="-1">
+        <h2>There is a problem</h2>
+        <ul id="error-list"></ul>
+      </div>
+
+      <form id="search-form" novalidate>
+        <div class="tabs">
+          <button type="button" class="tab-btn active" id="tab-postcode" onclick="switchTab('postcode')">Postcode</button>
+          <button type="button" class="tab-btn" id="tab-address" onclick="switchTab('address')">Full address</button>
+        </div>
+
+        <div class="tab-panel active" id="panel-postcode">
+          <div class="field-group" id="postcode-group">
+            <label for="postcode-input">Enter a postcode</label>
+            <div class="hint">For example, CF10 1EP, SW1A 1AA, M1 1AE, B1 1BB, or LS1 1UR</div>
+            <div class="field-error" id="postcode-error">Enter a full UK postcode in the correct format.</div>
+            <input type="text" id="postcode-input" name="postcode" autocomplete="postal-code" aria-describedby="postcode-error">
+          </div>
+        </div>
+
+        <div class="tab-panel" id="panel-address">
+          <div class="field-group" id="address-group">
+            <label for="address-input">Enter the full address</label>
+            <div class="hint">Include the postcode so we can match it precisely, e.g. 12 High Street, Pontypridd, CF37 1BA</div>
+            <div class="field-error" id="address-error">Enter a full address, including a postcode.</div>
+            <input type="text" id="address-input" name="address" autocomplete="street-address" aria-describedby="address-error">
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary" id="submit-btn">Find My Probation Office</button>
+      </form>
+
+      <div class="loading-panel" id="loading-panel">
+        <div class="spinner"></div>
+        <p>Finding your probation office&hellip;</p>
+      </div>
+
+      <div class="not-found-panel" id="not-found-panel">
+        <h2>We could not find a probation office for this location</h2>
+        <p id="not-found-reason">This can happen if the postcode is outside England &amp; Wales (e.g., Scotland or Northern Ireland), or if it has been entered incorrectly.</p>
+        <p><strong>What you can do next:</strong></p>
+        <ul>
+          <li>Double-check the postcode or address and try again</li>
+          <li>Call the National Probation Service helpline on <a href="tel:03001234567">0300 123 4567</a> (Mon–Fri, 9am–5pm)</li>
+          <li>Ask your Case Administrator or the court for your assigned office name</li>
+        </ul>
+        <button class="btn-secondary" onclick="resetSearch()">Try another search</button>
+      </div>
+
+      <div class="privacy-note">
+        <strong>How we use your information</strong>
+        Your postcode or address is used only to identify the correct office and is not stored after your search, in line with UK GDPR.
+      </div>
+    </div>
+
+    <div class="wide-container result-panel" id="result-view">
+      <div class="confirm-banner">
+        <div class="tick">✓</div>
+        <div>Probation office found</div>
+      </div>
+
+      <div class="step-indicator">Step 2 of 2 — Confirm your office</div>
+      <h1 id="result-heading">Your Probation Office</h1>
+
+      <div class="redirect-notice" id="redirect-notice"></div>
+
+      <div class="map-container">
+        <div id="office-map"><p style="padding:20px; color:#505a5f;">Map loading&hellip;</p></div>
+        <div class="map-caption" id="map-caption">Probation Office</div>
+      </div>
+
+      <div class="office-card">
+        <span class="distance-tag" id="office-area">Local authority / PDU area</span>
+        <h3 id="office-name">Probation Office</h3>
+
+        <div class="office-detail-row">
+          <div class="icon">&#128205;</div>
+          <div id="office-address">Address</div>
+        </div>
+        <div class="office-detail-row">
+          <div class="icon">&#9742;</div>
+          <div><a href="tel:03001234567" id="office-phone">0300 123 4567</a></div>
+        </div>
+        <div class="office-detail-row">
+          <div class="icon">&#128231;</div>
+          <div><a href="#" id="office-email">HMPPSCorrespondence@justice.gov.uk</a></div>
+        </div>
+        <div class="office-detail-row">
+          <div class="icon">&#128337;</div>
+          <div>Monday to Friday, 9:00am – 5:00pm<br>Closed weekends and bank holidays</div>
+        </div>
+        <div class="office-detail-row">
+          <div class="icon">&#9888;</div>
+          <div><strong>Bring with you:</strong> photo ID and your appointment letter or court paperwork.</div>
+        </div>
+        <p id="print-timestamp" class="print-only"></p>
+      </div>
+
+      <div class="action-row">
+        <button class="btn-primary" onclick="getDirections()">Get directions</button>
+        <button class="btn-secondary" onclick="resetSearch()">Start over</button>
+        <button class="link-button" onclick="window.print()">Print confirmation</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TOOL 2: DELIUS NSI ALLOCATION TOOL ==================== -->
+  <div id="tool-delius" class="tool-view">
+    <div class="container">
+      <h1>Delius NSI Team Locator (England &amp; Wales)</h1>
+      <p class="lede">Determine which Probation Region, Probation Delivery Unit (PDU), LDU cluster, and Non-Statutory Intervention (NSI) team on Delius to allocate a case to across England and Wales.</p>
+
+      <div class="error-summary" id="delius-error-summary" role="alert" tabindex="-1">
+        <h2>There is a problem</h2>
+        <ul id="delius-error-list"></ul>
+      </div>
+
+      <form id="delius-form" novalidate>
+        <div class="field-group" id="delius-postcode-group">
+          <label for="delius-postcode-input">Enter offender's postcode</label>
+          <div class="hint">Works across all England &amp; Wales postcodes (e.g., CF37 1BA, SW1A 1AA, M1 1AE, B1 1BB, LS1 1UR, BS1 1AA, NE1 1AA)</div>
+          <div class="field-error" id="delius-postcode-error">Enter a valid postcode to find the Delius NSI allocation.</div>
+          <input type="text" id="delius-postcode-input" name="delius-postcode" autocomplete="off">
+        </div>
+        <button type="submit" class="btn-primary">Find Delius NSI Team</button>
+      </form>
+
+      <div id="delius-result" class="delius-box" style="display:none;">
+        <h2>Delius NSI Allocation Details</h2>
+        <div class="office-detail-row">
+          <div><strong>HMPPS Probation Region:</strong> <span id="delius-region-name" style="font-weight:bold;">-</span></div>
+        </div>
+        <div class="office-detail-row">
+          <div><strong>Probation Delivery Unit (PDU):</strong> <span id="delius-pdu-name" style="font-weight:bold;">-</span></div>
+        </div>
+        <div class="office-detail-row">
+          <div><strong>Target Area / Local Authority:</strong> <span id="delius-area-name" style="font-size:20px; color:var(--govuk-blue); font-weight:bold;">-</span></div>
+        </div>
+        <div class="office-detail-row">
+          <div><strong>Delius LDU Cluster:</strong> <span id="delius-ldu-name">-</span></div>
+        </div>
+        <div class="office-detail-row">
+          <div><strong>Recommended NSI Team:</strong> <span id="delius-team-name" class="delius-code">-</span></div>
+        </div>
+        <div class="office-detail-row">
+          <div><strong>Assigned Hub / Office Location:</strong> <span id="delius-office-name">-</span></div>
+        </div>
+        <div class="office-detail-row" style="margin-top:15px; background:#fff; padding:12px; border:1px solid var(--govuk-line);">
+          <div><strong>Allocation Instructions:</strong> <span id="delius-instructions">-</span></div>
+        </div>
+        <div class="action-row">
+          <button class="btn-secondary" onclick="resetDeliusSearch()" style="margin-left:0;">Clear search</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="container">
+    Built for HM Prison &amp; Probation Service case administrators and members of the public across England &amp; Wales.
+  </div>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+  // Top Tool Switcher
+  function switchTool(tool){
+    document.getElementById('nav-locator').classList.toggle('active', tool === 'locator');
+    document.getElementById('nav-delius').classList.toggle('active', tool === 'delius');
+    document.getElementById('tool-locator').classList.toggle('active', tool === 'locator');
+    document.getElementById('tool-delius').classList.toggle('active', tool === 'delius');
+  }
+
+  // Locator Tab Switcher
+  let activeTab = 'postcode';
+  function switchTab(tab){
+    activeTab = tab;
+    document.getElementById('tab-postcode').classList.toggle('active', tab==='postcode');
+    document.getElementById('tab-address').classList.toggle('active', tab==='address');
+    document.getElementById('panel-postcode').classList.toggle('active', tab==='postcode');
+    document.getElementById('panel-address').classList.toggle('active', tab==='address');
+    clearErrors();
+  }
+
+  // DOM Elements
+  const postcodeInput = document.getElementById('postcode-input');
+  const addressInput = document.getElementById('address-input');
+  const form = document.getElementById('search-form');
+  const errorSummary = document.getElementById('error-summary');
+  const errorList = document.getElementById('error-list');
+  const postcodeGroup = document.getElementById('postcode-group');
+  const addressGroup = document.getElementById('address-group');
+  const postcodeError = document.getElementById('postcode-error');
+  const addressError = document.getElementById('address-error');
+  const loadingPanel = document.getElementById('loading-panel');
+  const notFoundPanel = document.getElementById('not-found-panel');
+  const notFoundReason = document.getElementById('not-found-reason');
+  const searchView = document.getElementById('search-view');
+  const resultView = document.getElementById('result-view');
+  const redirectNotice = document.getElementById('redirect-notice');
+
+  let leafletMap = null;
+  let currentOffice = null;
+  let currentPostcode = '';
+  let leafletMarker = null;
+
+  function showOfficeOnMap(lat, lng, label){
+    if(!window.L){ return; }
+    if(!leafletMap){
+      leafletMap = L.map('office-map', { scrollWheelZoom:false }).setView([lat, lng], 12);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution:'&copy; OpenStreetMap contributors',
+        maxZoom:18
+      }).addTo(leafletMap);
+    } else {
+      leafletMap.setView([lat, lng], 12);
+    }
+    if(leafletMarker){ leafletMap.removeLayer(leafletMarker); }
+    leafletMarker = L.marker([lat, lng]).addTo(leafletMap).bindPopup(label);
+    setTimeout(() => leafletMap.invalidateSize(), 200);
+  }
+
+  // ==================== OFFICES & HUBS DATABASE (WALES + ENGLAND) ====================
+  const offices = {
+    // --- WALES ---
+    cardiffWestgate: { name:'Cardiff Probation Office (Westgate Street)', authority:'Cardiff local authority area', address:'33-35 Westgate Street, Cardiff, CF10 1JE', phone:'0292 023 2999', email:'HMPPSWalesCorrespondence@justice.gov.uk', lat:51.4791, lng:-3.1826 },
+    cardiffLlanrumney: { name:'Cardiff Probation Office (Llanrumney Hub)', authority:'Cardiff local authority area', address:'Llanrumney Hub, Countisbury Avenue, Cardiff, CF3 5NQ', phone:'0292 078 0994', email:'HMPPSWalesCorrespondence@justice.gov.uk', lat:51.5241, lng:-3.1215 },
+    cardiffStar: { name:'Cardiff Probation Office (Star Hub)', authority:'Cardiff local authority area', address:'Star Hub, Muriton Road, Cardiff, CF24 2SJ', phone:'0292 240 1222', email:'HMPPSWalesCorrespondence@justice.gov.uk', lat:51.4834, lng:-3.1602 },
+    rct: { name:'Pontypridd Probation Office', authority:'Rhondda Cynon Taff local authority area', address:'The Broadway, Pontypridd, CF37 1BA', phone:'01443 494 200', email:'HMPPSWalesCorrespondence@justice.gov.uk', lat:51.6013, lng:-3.3425 },
+    merthyr: { name:'Martin Evans House', authority:'Merthyr Tydfil local authority area', address:'Avenue De Clichy, Merthyr Tydfil, CF47 8LD', phone:'01685 702 630', email:'HMPPSWalesCorrespondence@justice.gov.uk', lat:51.7455, lng:-3.3786 },
+    caerphilly: { name:'Centenary House', authority:'Caerphilly local authority area', address:'Unit 1, De Clare Court, Pontygwindy Industrial Estate, Caerphilly, CF83 3HU', phone:'0292 076 0000', email:'HMPPSWalesCorrespondence@justice.gov.uk', lat:51.5842, lng:-3.2179 },
+    bridgendMain: { name:'Bridgend Probation Office', authority:'Bridgend local authority area', address:'Tremains Business Park, Tremains Road, Bridgend, CF31 1TZ', phone:'01656 674 700', email:'HMPPSWalesCorrespondence@justice.gov.uk', lat:51.5062, lng:-3.5779 },
+    bridgendMaesteg: { name:'Hartshorn House', authority:'Bridgend local authority area (Maesteg)', address:'Neath Road, Maesteg, Bridgend, CF34 9EE', phone:'01656 738 320', email:'HMPPSWalesCorrespondence@justice.gov.uk', lat:51.6114, lng:-3.6482 },
+    vale: { name:'Barry Probation Office', authority:'Vale of Glamorgan local authority area', address:'Barry Police Station, Gladstone Road, Barry, CF63 1TD', phone:'0144 645 0500', email:'HMPPSWalesCorrespondence@justice.gov.uk', lat:51.4022, lng:-3.2854 },
+    blaenauGwentViaCaerphilly: { name:'Centenary House (Caerphilly)', authority:'Blaenau Gwent local authority area', address:'Unit 1, De Clare Court, Pontygwindy Industrial Estate, Caerphilly, CF83 3HU', phone:'0292 076 0000', email:'HMPPSWalesCorrespondence@justice.gov.uk', lat:51.5842, lng:-3.2179, notice:'The usual Blaenau Gwent office (50 Bethcar Street, Ebbw Vale) is closed until further notice. Staff have been redirected to Caerphilly Probation Office, shown below.' },
+    newport: { name:'Usk House', authority:'Newport local authority area', address:'Lower Dock Street, Newport, NP20 2GD', phone:'0163 324 7300', email:'HMPPSWalesCorrespondence@justice.gov.uk', lat:51.5877, lng:-2.9984 },
+    torfaen: { name:'Torfaen House', authority:'Torfaen local authority area', address:'Station Road, Sebastopol, Pontypool, NP4 5ES', phone:'0149 575 5221', email:'HMPPSWalesCorrespondence@justice.gov.uk', lat:51.6987, lng:-3.0369 },
+    monmouthshire: { name:'Usk House (Newport / Monmouthshire Cover)', authority:'Monmouthshire local authority area', address:'Lower Dock Street, Newport, NP20 2GD', phone:'0163 324 7300', email:'HMPPSWalesCorrespondence@justice.gov.uk', lat:51.5877, lng:-2.9984 },
+    swansea: { name:'Swansea Probation Office', authority:'Swansea local authority area', address:'West Glamorgan House, 12 Orchard Street, Swansea, SA1 5AD', phone:'0179 264 5505', email:'HMPPSWalesCorrespondence@justice.gov.uk', lat:51.6214, lng:-3.9436 },
+    neathPortTalbot: { name:'Swansea Probation Office (Neath Port Talbot Cover)', authority:'Neath Port Talbot local authority area', address:'West Glamorgan House, 12 Orchard Street, Swansea, SA1 5AD', phone:'0179 264 5505', email:'HMPPSWalesCorrespondence@justice.gov.uk', lat:51.6214, lng:-3.9436 },
+    carmarthen: { name:'Carmarthen Probation Office', authority:'Carmarthenshire local authority area', address:'7a-7b Water Street, Carmarthen, SA31 1PY', phone:'0126 722 2299', email:'HMPPSWalesCorrespondence@justice.gov.uk', lat:51.8560, lng:-4.3125 },
+    llanelli: { name:'Llanelli Probation Office', authority:'Carmarthenshire local authority area (Llanelli)', address:'Lloyd Street, Llanelli, SA15 2PU', phone:'01554 773 736', email:'HMPPSWalesCorrespondence@justice.gov.uk', lat:51.6809, lng:-4.1626 },
+    pembrokeshire: { name:'Haverfordwest Probation Office', authority:'Pembrokeshire local authority area', address:'14 High Street, Haverfordwest, SA61 2DA', phone:'0143 776 2013', email:'HMPPSWalesCorrespondence@justice.gov.uk', lat:51.8014, lng:-4.9680 },
+    ceredigion: { name:'Aberystwyth Probation Office', authority:'Ceredigion local authority area', address:'23 Grays Inn Road, Aberystwyth, SY23 1QE', phone:'0197 063 6460', email:'HMPPSWalesCorrespondence@justice.gov.uk', lat:52.4153, lng:-4.0829 },
+    powysLlandrindod: { name:'The Limes / Temple Street', authority:'Powys local authority area', address:'Temple Street, Llandrindod Wells, LD1 5DP', phone:'0159 782 7700', email:'HMPPSWalesCorrespondence@justice.gov.uk', lat:52.2430, lng:-3.3803 },
+    powysBrecon: { name:'Powys Probation Office', authority:'Powys local authority area (Brecon)', address:'Plas Y Ffynnon, Cambrian Way, Brecon, LD3 7HP', phone:'0187 461 4150', email:'HMPPSWalesCorrespondence@justice.gov.uk', lat:51.9483, lng:-3.3888 },
+    conwyColwynBay: { name:'25 Conway Road', authority:'Conwy local authority area', address:'25 Conway Road, Colwyn Bay, LL29 7AA', phone:'0149 253 0600', email:'HMPPSWalesCorrespondence@justice.gov.uk', lat:53.2932, lng:-3.7250 },
+    conwyLlandudno: { name:'Llandudno Probation contact centre', authority:'Conwy local authority area (Llandudno)', address:'Llandudno Magistrates’ Court, Conway Road, Llandudno, LL30 1GA', phone:'0149 287 3075', email:'WalesNPS.Llandudno.MagsCourt@justice.gov.uk', lat:53.3241, lng:-3.8283 },
+    denbighshire: { name:'25 Conway Road (Denbighshire Cover)', authority:'Denbighshire local authority area', address:'25 Conway Road, Colwyn Bay, LL29 7AA', phone:'0149 253 0600', email:'HMPPSWalesCorrespondence@justice.gov.uk', lat:53.2932, lng:-3.7250 },
+    flintshire: { name:'Flintshire Probation Office', authority:'Flintshire local authority area', address:'Unit 6, Acorn Business Park, Flint, CH6 5YN', phone:'0135 279 2140', email:'HMPPSWalesCorrespondence@justice.gov.uk', lat:53.2481, lng:-3.1319 },
+    wrexhamMain: { name:'Wrexham Probation Office', authority:'Wrexham local authority area', address:'Wrexham Technology Park, Ellice Way, Wrexham, LL13 7YX', phone:'01978 804 109', email:'HMPPSWalesCorrespondence@justice.gov.uk', lat:53.0446, lng:-2.9739 },
+    gwyneddAnglesey: { name:'Llandudno / North West Wales Hub', authority:'Gwynedd & Anglesey local authority area', address:'Llandudno Magistrates’ Court, Conway Road, Llandudno, LL30 1GA', phone:'0149 287 3075', email:'HMPPSWalesCorrespondence@justice.gov.uk', lat:53.3241, lng:-3.8283 },
+
+    // --- ENGLAND (REGIONAL & PDU HUBS) ---
+    eng_london_central: { name:'London Probation Hub (Westminster / Central)', authority:'London Region — Central & West PDU', address:'45-47 Great Peter Street, Westminster, London, SW1P 3LT', phone:'0300 047 5000', email:'LondonProbation@justice.gov.uk', lat:51.4964, lng:-0.1292 },
+    eng_london_north: { name:'London Probation Hub (North / East)', authority:'London Region — North & East PDU', address:'210-216 Kingsland Road, Hackney, London, E2 8AX', phone:'0300 047 5000', email:'LondonProbation@justice.gov.uk', lat:51.5323, lng:-0.0772 },
+    eng_london_south: { name:'London Probation Hub (South / Croydon)', authority:'London Region — South London PDU', address:'17-21 Dingwall Road, Croydon, CR0 2NF', phone:'0300 047 5000', email:'LondonProbation@justice.gov.uk', lat:51.3758, lng:-0.0956 },
+    eng_gm: { name:'Greater Manchester Probation Hub (Manchester Central)', authority:'Greater Manchester Region — Manchester & Salford PDU', address:'Oakland House, Talbot Road, Old Trafford, Manchester, M16 0PQ', phone:'0161 872 4802', email:'GMProbation@justice.gov.uk', lat:53.4614, lng:-2.2856 },
+    eng_northwest: { name:'North West Probation Hub (Liverpool / Merseyside)', authority:'North West Region — Merseyside & Cheshire PDU', address:'Burlington House, Crosby Road North, Waterloo, Liverpool, L22 0PJ', phone:'0151 920 9201', email:'NWProbation@justice.gov.uk', lat:53.4746, lng:-3.0258 },
+    eng_northeast: { name:'North East Probation Hub (Newcastle / Tyne & Wear)', authority:'North East Region — Northumbria & Durham PDU', address:'Swan House, Pilgrim Street, Newcastle upon Tyne, NE1 6PZ', phone:'0191 261 2323', email:'NEProbation@justice.gov.uk', lat:54.9718, lng:-1.6114 },
+    eng_yorkshire: { name:'Yorkshire & The Humber Hub (Leeds / West Yorkshire)', authority:'Yorkshire & The Humber Region — West & South Yorkshire PDU', address:'Cliffords House, 53-55 Great George Street, Leeds, LS1 3BB', phone:'0113 244 8241', email:'YHProbation@justice.gov.uk', lat:53.8013, lng:-1.5516 },
+    eng_westmidlands: { name:'West Midlands Probation Hub (Birmingham Central)', authority:'West Midlands Region — Birmingham & Black Country PDU', address:'102-104 New Street, Birmingham, B2 4HQ', phone:'0121 248 6666', email:'WMProbation@justice.gov.uk', lat:52.4796, lng:-1.8986 },
+    eng_eastmidlands: { name:'East Midlands Probation Hub (Nottingham / Leicester)', authority:'East Midlands Region — Nottinghamshire & Leicestershire PDU', address:'Marina Road, Castle Marina, Nottingham, NG7 1TN', phone:'0115 950 6431', email:'EMProbation@justice.gov.uk', lat:52.9463, lng:-1.1636 },
+    eng_eastengland: { name:'East of England Probation Hub (Cambridge / Chelmsford)', authority:'East of England Region — Cambridgeshire & Essex PDU', address:'Stuart House, St Johns Street, Peterborough, PE1 5DD', phone:'01733 564 111', email:'EEProbation@justice.gov.uk', lat:52.5739, lng:-0.2417 },
+    eng_southwest: { name:'South West Probation Hub (Bristol & Avon)', authority:'South West Region — Bristol, Gloucestershire & Somerset PDU', address:'7-11 St Stephens Street, Bristol, BS1 1EE', phone:'0117 915 1300', email:'SWProbation@justice.gov.uk', lat:51.4536, lng:-2.5961 },
+    eng_southcentral: { name:'South Central Probation Hub (Reading / Southampton)', authority:'South Central Region — Thames Valley & Hampshire PDU', address:'Friars Walk, Friar Street, Reading, RG1 1LA', phone:'0118 950 0911', email:'SCProbation@justice.gov.uk', lat:51.4566, lng:-0.9742 },
+    eng_kent_surrey_sussex: { name:'Kent, Surrey & Sussex Hub (Maidstone / Brighton)', authority:'Kent, Surrey & Sussex Region — KSS PDU', address:'25-27 Knightrider Street, Maidstone, Kent, ME15 6LP', phone:'01622 691 313', email:'KSSProbation@justice.gov.uk', lat:51.2704, lng:0.5227 }
+  };
+
+  // Exact district overrides (Wales + Cross-border exceptions)
+  const districtMap = {
+    // Cardiff
+    'CF3':'cardiffLlanrumney',
+    'CF24':'cardiffStar',
+    'CF10':'cardiffWestgate','CF11':'cardiffWestgate','CF14':'cardiffWestgate','CF15':'cardiffWestgate','CF23':'cardiffWestgate','CF5':'cardiffWestgate',
+    // RCT
+    'CF37':'rct','CF38':'rct','CF39':'rct','CF40':'rct','CF41':'rct','CF42':'rct','CF43':'rct','CF45':'rct','CF72':'rct',
+    // Merthyr
+    'CF47':'merthyr','CF48':'merthyr',
+    // Caerphilly
+    'CF81':'caerphilly','CF82':'caerphilly','CF83':'caerphilly','NP11':'caerphilly','NP12':'caerphilly',
+    // Bridgend
+    'CF34':'bridgendMaesteg',
+    'CF31':'bridgendMain','CF32':'bridgendMain','CF33':'bridgendMain','CF35':'bridgendMain','CF36':'bridgendMain',
+    // Vale of Glamorgan
+    'CF61':'vale','CF62':'vale','CF63':'vale','CF64':'vale','CF71':'vale',
+    // Blaenau Gwent
+    'NP13':'blaenauGwentViaCaerphilly','NP22':'blaenauGwentViaCaerphilly','NP23':'blaenauGwentViaCaerphilly','NP24':'blaenauGwentViaCaerphilly',
+    // Newport
+    'NP10':'newport','NP18':'newport','NP19':'newport','NP20':'newport',
+    // Torfaen
+    'NP4':'torfaen','NP44':'torfaen',
+    // Monmouthshire
+    'NP7':'monmouthshire','NP15':'monmouthshire','NP16':'monmouthshire','NP25':'monmouthshire','NP26':'monmouthshire',
+    // Swansea
+    'SA1':'swansea','SA2':'swansea','SA3':'swansea','SA4':'swansea','SA5':'swansea','SA6':'swansea','SA7':'swansea','SA8':'swansea','SA9':'swansea',
+    // Neath Port Talbot
+    'SA10':'neathPortTalbot','SA11':'neathPortTalbot','SA12':'neathPortTalbot','SA13':'neathPortTalbot',
+    // Carmarthenshire
+    'SA14':'llanelli','SA15':'llanelli','SA16':'llanelli','SA17':'llanelli','SA18':'llanelli','SA19':'llanelli','SA20':'llanelli',
+    'SA31':'carmarthen','SA32':'carmarthen','SA33':'carmarthen','SA34':'carmarthen','SA38':'carmarthen','SA39':'carmarthen','SA40':'carmarthen',
+    // Pembrokeshire
+    'SA61':'pembrokeshire','SA62':'pembrokeshire','SA63':'pembrokeshire','SA64':'pembrokeshire','SA65':'pembrokeshire','SA66':'pembrokeshire','SA67':'pembrokeshire','SA68':'pembrokeshire','SA69':'pembrokeshire','SA70':'pembrokeshire','SA71':'pembrokeshire','SA72':'pembrokeshire','SA73':'pembrokeshire',
+    // Ceredigion
+    'SY23':'ceredigion','SY24':'ceredigion','SY25':'ceredigion','SA43':'ceredigion','SA44':'ceredigion','SA45':'ceredigion','SA46':'ceredigion','SA47':'ceredigion','SA48':'ceredigion',
+    // Powys
+    'LD1':'powysLlandrindod','LD2':'powysLlandrindod',
+    'LD3':'powysBrecon','LD4':'powysBrecon','LD5':'powysBrecon','LD6':'powysBrecon','LD7':'powysBrecon','LD8':'powysBrecon',
+    'SY15':'powysLlandrindod','SY16':'powysLlandrindod','SY17':'powysLlandrindod','SY18':'powysLlandrindod','SY19':'powysLlandrindod','SY20':'powysLlandrindod','SY21':'powysLlandrindod','SY22':'powysLlandrindod',
+    // Conwy
+    'LL30':'conwyLlandudno',
+    'LL24':'conwyColwynBay','LL25':'conwyColwynBay','LL26':'conwyColwynBay','LL27':'conwyColwynBay','LL28':'conwyColwynBay','LL29':'conwyColwynBay','LL31':'conwyColwynBay','LL32':'conwyColwynBay','LL33':'conwyColwynBay','LL34':'conwyColwynBay',
+    // Denbighshire
+    'LL15':'denbighshire','LL16':'denbighshire','LL17':'denbighshire','LL18':'denbighshire','LL19':'denbighshire','LL20':'denbighshire','LL21':'denbighshire','LL22':'denbighshire',
+    // Flintshire
+    'CH4':'flintshire','CH5':'flintshire','CH6':'flintshire','CH7':'flintshire','CH8':'flintshire',
+    // Wrexham
+    'LL11':'wrexhamMain','LL12':'wrexhamMain','LL13':'wrexhamMain','LL14':'wrexhamMain',
+    // Gwynedd & Anglesey
+    'LL35':'gwyneddAnglesey','LL36':'gwyneddAnglesey','LL37':'gwyneddAnglesey','LL38':'gwyneddAnglesey','LL39':'gwyneddAnglesey','LL40':'gwyneddAnglesey','LL41':'gwyneddAnglesey','LL42':'gwyneddAnglesey','LL43':'gwyneddAnglesey','LL44':'gwyneddAnglesey','LL45':'gwyneddAnglesey','LL46':'gwyneddAnglesey','LL47':'gwyneddAnglesey','LL48':'gwyneddAnglesey','LL49':'gwyneddAnglesey','LL51':'gwyneddAnglesey','LL52':'gwyneddAnglesey','LL53':'gwyneddAnglesey','LL54':'gwyneddAnglesey','LL55':'gwyneddAnglesey','LL56':'gwyneddAnglesey','LL57':'gwyneddAnglesey','LL58':'gwyneddAnglesey','LL59':'gwyneddAnglesey','LL60':'gwyneddAnglesey','LL61':'gwyneddAnglesey','LL62':'gwyneddAnglesey','LL63':'gwyneddAnglesey','LL64':'gwyneddAnglesey','LL65':'gwyneddAnglesey','LL66':'gwyneddAnglesey','LL67':'gwyneddAnglesey','LL68':'gwyneddAnglesey','LL69':'gwyneddAnglesey','LL70':'gwyneddAnglesey','LL71':'gwyneddAnglesey','LL72':'gwyneddAnglesey','LL73':'gwyneddAnglesey','LL74':'gwyneddAnglesey','LL75':'gwyneddAnglesey','LL76':'gwyneddAnglesey','LL77':'gwyneddAnglesey','LL78':'gwyneddAnglesey'
+  };
+
+  // England Postcode Area (1 or 2 letter prefix) Mapping to HMPPS Regions
+  const englandAreaMap = {
+    // London Region
+    'EC':'eng_london_central', 'WC':'eng_london_central', 'W':'eng_london_central', 'SW':'eng_london_central', 'NW':'eng_london_central', 'HA':'eng_london_central', 'UB':'eng_london_central', 'TW':'eng_london_central',
+    'E':'eng_london_north', 'N':'eng_london_north', 'IG':'eng_london_north', 'RM':'eng_london_north', 'EN':'eng_london_north',
+    'SE':'eng_london_south', 'CR':'eng_london_south', 'BR':'eng_london_south', 'DA':'eng_london_south', 'SM':'eng_london_south', 'KT':'eng_london_south',
+
+    // Greater Manchester Region
+    'M':'eng_gm', 'BL':'eng_gm', 'OL':'eng_gm', 'SK':'eng_gm', 'WA':'eng_gm', 'WN':'eng_gm',
+
+    // North West Region (Cheshire, Merseyside, Lancashire, Cumbria)
+    'L':'eng_northwest', 'CH':'eng_northwest', 'CW':'eng_northwest', 'PR':'eng_northwest', 'FY':'eng_northwest', 'BB':'eng_northwest', 'LA':'eng_northwest', 'CA':'eng_northwest',
+
+    // North East Region
+    'NE':'eng_northeast', 'SR':'eng_northeast', 'DH':'eng_northeast', 'TS':'eng_northeast', 'DL':'eng_northeast', 'TD':'eng_northeast',
+
+    // Yorkshire & The Humber
+    'LS':'eng_yorkshire', 'BD':'eng_yorkshire', 'HX':'eng_yorkshire', 'HD':'eng_yorkshire', 'WF':'eng_yorkshire', 'S':'eng_yorkshire', 'DN':'eng_yorkshire', 'HU':'eng_yorkshire', 'YO':'eng_yorkshire', 'HG':'eng_yorkshire',
+
+    // West Midlands Region (including Shropshire SY1-SY14 & Herefordshire HR)
+    'B':'eng_westmidlands', 'CV':'eng_westmidlands', 'DY':'eng_westmidlands', 'WS':'eng_westmidlands', 'WV':'eng_westmidlands', 'ST':'eng_westmidlands', 'TF':'eng_westmidlands', 'WR':'eng_westmidlands', 'HR':'eng_westmidlands', 'SY':'eng_westmidlands',
+
+    // East Midlands Region
+    'NG':'eng_eastmidlands', 'DE':'eng_eastmidlands', 'LE':'eng_eastmidlands', 'NN':'eng_eastmidlands', 'LN':'eng_eastmidlands',
+
+    // East of England Region
+    'CB':'eng_eastengland', 'PE':'eng_eastengland', 'IP':'eng_eastengland', 'NR':'eng_eastengland', 'CO':'eng_eastengland', 'CM':'eng_eastengland', 'SS':'eng_eastengland', 'SG':'eng_eastengland', 'AL':'eng_eastengland', 'LU':'eng_eastengland', 'MK':'eng_eastengland', 'HP':'eng_eastengland', 'WD':'eng_eastengland',
+
+    // South West Region
+    'BS':'eng_southwest', 'BA':'eng_southwest', 'GL':'eng_southwest', 'SN':'eng_southwest', 'SP':'eng_southwest', 'TA':'eng_southwest', 'DT':'eng_southwest', 'BH':'eng_southwest', 'EX':'eng_southwest', 'TQ':'eng_southwest', 'PL':'eng_southwest', 'TR':'eng_southwest',
+
+    // South Central Region
+    'RG':'eng_southcentral', 'OX':'eng_southcentral', 'SL':'eng_southcentral', 'SO':'eng_southcentral', 'PO':'eng_southcentral', 'GU':'eng_southcentral',
+
+    // Kent, Surrey & Sussex Region
+    'ME':'eng_kent_surrey_sussex', 'CT':'eng_kent_surrey_sussex', 'TN':'eng_kent_surrey_sussex', 'BN':'eng_kent_surrey_sussex', 'RH':'eng_kent_surrey_sussex'
+  };
+
+  function clearErrors(){
+    errorSummary.classList.remove('show');
+    errorList.innerHTML = '';
+    postcodeGroup.classList.remove('has-error');
+    addressGroup.classList.remove('has-error');
+    postcodeError.classList.remove('show');
+    addressError.classList.remove('show');
+    notFoundPanel.classList.remove('show');
+  }
+
+  function isValidPostcode(pc){
+    const re = /^[A-Z]{1,2}[0-9][A-Z0-9]?\s*[0-9][A-Z]{2}$/i;
+    return re.test(pc.trim());
+  }
+
+  function getDistrict(postcode){
+    const normalised = postcode.replace(/\s+/g, '').toUpperCase();
+    if(normalised.length < 5) return null;
+    return normalised.slice(0, -3);
+  }
+
+  function getAreaPrefix(postcode){
+    const match = postcode.trim().toUpperCase().match(/^[A-Z]{1,2}/);
+    return match ? match[0] : null;
+  }
+
+  function extractPostcodeFromAddress(address){
+    const match = address.toUpperCase().match(/[A-Z]{1,2}[0-9][A-Z0-9]?\s*[0-9][A-Z]{2}/);
+    return match ? match[0] : null;
+  }
+
+  function resolveOfficeKey(postcode){
+    const normalised = postcode.replace(/\s+/g, '').toUpperCase();
+    const district = getDistrict(normalised);
+    if(!district) return null;
+
+    // Special sector split rule for CF44 (Merthyr vs Pontypridd/RCT)
+    if(district === 'CF44'){
+      const sectorDigit = normalised.slice(-3, -2);
+      return (sectorDigit === '7' || sectorDigit === '8' || sectorDigit === '9') ? 'merthyr' : 'rct';
+    }
+
+    // 1. Check exact district map (all Welsh districts & specific border districts)
+    if(districtMap[district]){
+      return districtMap[district];
+    }
+
+    // 2. Fallback to England Postcode Area Prefix (covering all of England)
+    const areaPrefix = getAreaPrefix(normalised);
+    if(areaPrefix && englandAreaMap[areaPrefix]){
+      return englandAreaMap[areaPrefix];
+    }
+
+    return null;
+  }
+
+  function lookupOffice(postcode){
+    const key = resolveOfficeKey(postcode);
+    return key ? offices[key] : null;
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    clearErrors();
+
+    let postcodeToLookup = null;
+
+    if(activeTab === 'postcode'){
+      const value = postcodeInput.value.trim();
+      const valid = value.length > 0 && isValidPostcode(value);
+      if(!valid){
+        postcodeGroup.classList.add('has-error');
+        postcodeError.classList.add('show');
+        errorList.innerHTML = '<li><a href="#postcode-input">Please enter a valid postcode.</a></li>';
+        errorSummary.classList.add('show');
+        errorSummary.focus();
+        return;
+      }
+      postcodeToLookup = value;
+    } else {
+      const value = addressInput.value.trim();
+      const validLength = value.length >= 8 && /[a-zA-Z]/.test(value);
+      if(!validLength){
+        addressGroup.classList.add('has-error');
+        addressError.classList.add('show');
+        errorList.innerHTML = '<li><a href="#address-input">Please enter a full address.</a></li>';
+        errorSummary.classList.add('show');
+        errorSummary.focus();
+        return;
+      }
+      const foundPostcode = extractPostcodeFromAddress(value);
+      if(!foundPostcode){
+        addressGroup.classList.add('has-error');
+        addressError.classList.add('show');
+        addressError.textContent = 'Please include a postcode in the address so we can find the right office.';
+        errorList.innerHTML = '<li><a href="#address-input">Please include a valid postcode in your full address.</a></li>';
+        errorSummary.classList.add('show');
+        errorSummary.focus();
+        return;
+      }
+      postcodeToLookup = foundPostcode;
+    }
+
+    loadingPanel.classList.add('show');
+
+    setTimeout(() => {
+      loadingPanel.classList.remove('show');
+      const office = lookupOffice(postcodeToLookup);
+
+      if(!office){
+        notFoundReason.textContent = `No HMPPS England & Wales probation mapping was found for "${postcodeToLookup.toUpperCase()}". Please verify that the postcode is within England or Wales.`;
+        notFoundPanel.classList.add('show');
+        return;
+      }
+
+      currentOffice = office;
+      currentPostcode = postcodeToLookup.toUpperCase();
+      displayResult(office, currentPostcode);
+    }, 350);
+  });
+
+  function displayResult(office, postcode){
+    document.getElementById('office-name').textContent = office.name;
+    document.getElementById('office-area').textContent = office.authority;
+    document.getElementById('office-address').textContent = office.address;
+    
+    const phoneEl = document.getElementById('office-phone');
+    phoneEl.textContent = office.phone;
+    phoneEl.href = 'tel:' + office.phone.replace(/\s+/g, '');
+
+    const emailEl = document.getElementById('office-email');
+    emailEl.textContent = office.email;
+    emailEl.href = 'mailto:' + office.email;
+
+    if(office.notice){
+      redirectNotice.textContent = office.notice;
+      redirectNotice.classList.add('show');
+    } else {
+      redirectNotice.classList.remove('show');
+    }
+
+    document.getElementById('map-caption').textContent = `${office.name} — ${postcode}`;
+    document.getElementById('print-timestamp').textContent = `Searched on ${new Date().toLocaleDateString('en-GB')} for postcode ${postcode}.`;
+
+    searchView.style.display = 'none';
+    resultView.classList.add('show');
+    window.scrollTo(0, 0);
+
+    showOfficeOnMap(office.lat, office.lng, office.name);
+  }
+
+  function resetSearch(){
+    resultView.classList.remove('show');
+    searchView.style.display = 'block';
+    clearErrors();
+    window.scrollTo(0, 0);
+  }
+
+  function getDirections(){
+    if(!currentOffice) return;
+    const destination = encodeURIComponent(currentOffice.address);
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${destination}`, '_blank');
+  }
+
+  // ==================== ENGLAND & WALES DELIUS NSI ALLOCATION MAP ====================
+  const deliusNsiMap = {
+    // --- WALES ---
+    rct: {
+      region: "HMPPS Wales",
+      pdu: "Cwm Taf Morgannwg PDU",
+      area: "Rhondda Cynon Taff (RCT) / Pontypridd",
+      ldu: "Cwm Taf LDU Cluster",
+      team: "RCT_NSI_TEAM1",
+      office: "Pontypridd Probation Office (The Broadway)",
+      instructions: "Allocate NSI on Delius under Wales -> Cwm Taf LDU -> Pontypridd NSI Team. Ensure transfer notes state RCT Local Authority."
+    },
+    merthyr: {
+      region: "HMPPS Wales",
+      pdu: "Cwm Taf Morgannwg PDU",
+      area: "Merthyr Tydfil",
+      ldu: "Cwm Taf LDU Cluster",
+      team: "MERTHYR_NSI_TEAM1",
+      office: "Martin Evans House (Merthyr Tydfil)",
+      instructions: "Allocate NSI on Delius under Wales -> Cwm Taf LDU -> Merthyr Tydfil NSI Team."
+    },
+    bridgendMain: {
+      region: "HMPPS Wales",
+      pdu: "Cwm Taf Morgannwg PDU",
+      area: "Bridgend",
+      ldu: "Bridgend LDU Cluster",
+      team: "BRIDGEND_NSI_TEAM1",
+      office: "Bridgend Probation Office (Tremains Road)",
+      instructions: "Allocate NSI on Delius under Wales -> Bridgend LDU -> Bridgend NSI Team."
+    },
+    bridgendMaesteg: {
+      region: "HMPPS Wales",
+      pdu: "Cwm Taf Morgannwg PDU",
+      area: "Bridgend (Maesteg Sub-area)",
+      ldu: "Bridgend LDU Cluster",
+      team: "BRIDGEND_NSI_TEAM1",
+      office: "Hartshorn House (Maesteg)",
+      instructions: "Allocate NSI on Delius under Wales -> Bridgend LDU -> Bridgend NSI Team (Maesteg sub-allocation)."
+    },
+    cardiffWestgate: {
+      region: "HMPPS Wales",
+      pdu: "Cardiff and the Vale of Glamorgan PDU",
+      area: "Cardiff (Central / West / North)",
+      ldu: "Cardiff & Vale LDU Cluster",
+      team: "CARDIFF_NSI_WESTGATE",
+      office: "Cardiff Probation Office (Westgate Street)",
+      instructions: "Allocate NSI on Delius under Wales -> Cardiff & Vale LDU -> Cardiff Central/Westgate NSI Team."
+    },
+    cardiffLlanrumney: {
+      region: "HMPPS Wales",
+      pdu: "Cardiff and the Vale of Glamorgan PDU",
+      area: "Cardiff East (Llanrumney)",
+      ldu: "Cardiff & Vale LDU Cluster",
+      team: "CARDIFF_NSI_EAST",
+      office: "Cardiff Probation Office (Llanrumney Hub)",
+      instructions: "Allocate NSI on Delius under Wales -> Cardiff & Vale LDU -> Cardiff East / Llanrumney NSI Team."
+    },
+    cardiffStar: {
+      region: "HMPPS Wales",
+      pdu: "Cardiff and the Vale of Glamorgan PDU",
+      area: "Cardiff South East (Splott / Tremorfa / Adamsdown)",
+      ldu: "Cardiff & Vale LDU Cluster",
+      team: "CARDIFF_NSI_STAR",
+      office: "Cardiff Probation Office (Star Hub)",
+      instructions: "Allocate NSI on Delius under Wales -> Cardiff & Vale LDU -> Cardiff Star Hub NSI Team."
+    },
+    vale: {
+      region: "HMPPS Wales",
+      pdu: "Cardiff and the Vale of Glamorgan PDU",
+      area: "Vale of Glamorgan (Barry / Penarth / Llantwit)",
+      ldu: "Cardiff & Vale LDU Cluster",
+      team: "VALE_NSI_TEAM1",
+      office: "Barry Probation Office (Gladstone Road)",
+      instructions: "Allocate NSI on Delius under Wales -> Cardiff & Vale LDU -> Vale of Glamorgan NSI Team."
+    },
+    newport: {
+      region: "HMPPS Wales",
+      pdu: "Gwent PDU",
+      area: "Newport",
+      ldu: "Gwent LDU Cluster",
+      team: "NEWPORT_NSI_TEAM1",
+      office: "Usk House (Newport)",
+      instructions: "Allocate NSI on Delius under Wales -> Gwent LDU -> Newport NSI Team."
+    },
+    caerphilly: {
+      region: "HMPPS Wales",
+      pdu: "Gwent PDU",
+      area: "Caerphilly",
+      ldu: "Gwent LDU Cluster",
+      team: "CAERPHILLY_NSI_TEAM1",
+      office: "Centenary House (Caerphilly)",
+      instructions: "Allocate NSI on Delius under Wales -> Gwent LDU -> Caerphilly NSI Team."
+    },
+    blaenauGwentViaCaerphilly: {
+      region: "HMPPS Wales",
+      pdu: "Gwent PDU",
+      area: "Blaenau Gwent (Ebbw Vale / Tredegar / Brynmawr)",
+      ldu: "Gwent LDU Cluster",
+      team: "BLAENAU_GWENT_NSI_TEAM",
+      office: "Centenary House (Caerphilly - Temporary Cover)",
+      instructions: "Allocate NSI on Delius under Wales -> Gwent LDU -> Blaenau Gwent NSI Team (operating out of Caerphilly hub)."
+    },
+    torfaen: {
+      region: "HMPPS Wales",
+      pdu: "Gwent PDU",
+      area: "Torfaen (Pontypool / Cwmbran)",
+      ldu: "Gwent LDU Cluster",
+      team: "TORFAEN_NSI_TEAM1",
+      office: "Torfaen House (Sebastopol, Pontypool)",
+      instructions: "Allocate NSI on Delius under Wales -> Gwent LDU -> Torfaen NSI Team."
+    },
+    monmouthshire: {
+      region: "HMPPS Wales",
+      pdu: "Gwent PDU",
+      area: "Monmouthshire (Abergavenny / Monmouth / Chepstow)",
+      ldu: "Gwent LDU Cluster",
+      team: "MONMOUTH_NSI_TEAM1",
+      office: "Usk House (Newport / Monmouthshire Cover)",
+      instructions: "Allocate NSI on Delius under Wales -> Gwent LDU -> Monmouthshire NSI Team."
+    },
+    swansea: {
+      region: "HMPPS Wales",
+      pdu: "Swansea, Neath Port Talbot PDU",
+      area: "Swansea",
+      ldu: "Western Bay LDU Cluster",
+      team: "SWANSEA_NSI_TEAM1",
+      office: "Swansea Probation Office (Orchard Street)",
+      instructions: "Allocate NSI on Delius under Wales -> Western Bay LDU -> Swansea NSI Team."
+    },
+    neathPortTalbot: {
+      region: "HMPPS Wales",
+      pdu: "Swansea, Neath Port Talbot PDU",
+      area: "Neath Port Talbot",
+      ldu: "Western Bay LDU Cluster",
+      team: "NPT_NSI_TEAM1",
+      office: "Swansea Probation Office (NPT Cover)",
+      instructions: "Allocate NSI on Delius under Wales -> Western Bay LDU -> Neath Port Talbot NSI Team."
+    },
+    carmarthen: {
+      region: "HMPPS Wales",
+      pdu: "Dyfed-Powys PDU",
+      area: "Carmarthenshire (Carmarthen / Ammanford / North)",
+      ldu: "Dyfed-Powys LDU Cluster",
+      team: "CARMARTHEN_NSI_TEAM1",
+      office: "Carmarthen Probation Office (Water Street)",
+      instructions: "Allocate NSI on Delius under Wales -> Dyfed-Powys LDU -> Carmarthen NSI Team."
+    },
+    llanelli: {
+      region: "HMPPS Wales",
+      pdu: "Dyfed-Powys PDU",
+      area: "Carmarthenshire (Llanelli)",
+      ldu: "Dyfed-Powys LDU Cluster",
+      team: "LLANELLI_NSI_TEAM1",
+      office: "Llanelli Probation Office (Lloyd Street)",
+      instructions: "Allocate NSI on Delius under Wales -> Dyfed-Powys LDU -> Llanelli NSI Team."
+    },
+    pembrokeshire: {
+      region: "HMPPS Wales",
+      pdu: "Dyfed-Powys PDU",
+      area: "Pembrokeshire",
+      ldu: "Dyfed-Powys LDU Cluster",
+      team: "PEMBS_NSI_TEAM1",
+      office: "Haverfordwest Probation Office (High Street)",
+      instructions: "Allocate NSI on Delius under Wales -> Dyfed-Powys LDU -> Pembrokeshire NSI Team."
+    },
+    ceredigion: {
+      region: "HMPPS Wales",
+      pdu: "Dyfed-Powys PDU",
+      area: "Ceredigion",
+      ldu: "Dyfed-Powys LDU Cluster",
+      team: "CEREDIGION_NSI_TEAM1",
+      office: "Aberystwyth Probation Office (Grays Inn Road)",
+      instructions: "Allocate NSI on Delius under Wales -> Dyfed-Powys LDU -> Ceredigion NSI Team."
+    },
+    powysLlandrindod: {
+      region: "HMPPS Wales",
+      pdu: "Dyfed-Powys PDU",
+      area: "Powys (North & Mid - Newtown / Welshpool / Llandrindod)",
+      ldu: "Dyfed-Powys LDU Cluster",
+      team: "POWYS_NORTH_NSI_TEAM",
+      office: "The Limes / Temple Street (Llandrindod Wells)",
+      instructions: "Allocate NSI on Delius under Wales -> Dyfed-Powys LDU -> Powys North/Mid NSI Team."
+    },
+    powysBrecon: {
+      region: "HMPPS Wales",
+      pdu: "Dyfed-Powys PDU",
+      area: "Powys (South - Brecon / Ystradgynlais / Crickhowell)",
+      ldu: "Dyfed-Powys LDU Cluster",
+      team: "POWYS_SOUTH_NSI_TEAM",
+      office: "Powys Probation Office (Brecon)",
+      instructions: "Allocate NSI on Delius under Wales -> Dyfed-Powys LDU -> Powys South (Brecon) NSI Team."
+    },
+    wrexhamMain: {
+      region: "HMPPS Wales",
+      pdu: "North Wales PDU",
+      area: "Wrexham",
+      ldu: "North Wales East LDU Cluster",
+      team: "WREXHAM_NSI_TEAM1",
+      office: "Wrexham Probation Office (Ellice Way)",
+      instructions: "Allocate NSI on Delius under Wales -> North Wales East LDU -> Wrexham NSI Team."
+    },
+    flintshire: {
+      region: "HMPPS Wales",
+      pdu: "North Wales PDU",
+      area: "Flintshire",
+      ldu: "North Wales East LDU Cluster",
+      team: "FLINTSHIRE_NSI_TEAM1",
+      office: "Flintshire Probation Office (Acorn Business Park, Flint)",
+      instructions: "Allocate NSI on Delius under Wales -> North Wales East LDU -> Flintshire NSI Team."
+    },
+    denbighshire: {
+      region: "HMPPS Wales",
+      pdu: "North Wales PDU",
+      area: "Denbighshire (Rhyl / Prestatyn / Denbigh / Ruthin)",
+      ldu: "North Wales Central LDU Cluster",
+      team: "DENBIGHSHIRE_NSI_TEAM1",
+      office: "25 Conway Road (Colwyn Bay - Denbighshire Cover)",
+      instructions: "Allocate NSI on Delius under Wales -> North Wales Central LDU -> Denbighshire NSI Team."
+    },
+    conwyColwynBay: {
+      region: "HMPPS Wales",
+      pdu: "North Wales PDU",
+      area: "Conwy (Colwyn Bay / Abergele / Conwy Valley)",
+      ldu: "North Wales Central LDU Cluster",
+      team: "CONWY_NSI_TEAM1",
+      office: "25 Conway Road (Colwyn Bay)",
+      instructions: "Allocate NSI on Delius under Wales -> North Wales Central LDU -> Conwy NSI Team."
+    },
+    conwyLlandudno: {
+      region: "HMPPS Wales",
+      pdu: "North Wales PDU",
+      area: "Conwy (Llandudno)",
+      ldu: "North Wales Central LDU Cluster",
+      team: "CONWY_NSI_TEAM1",
+      office: "Llandudno Probation Contact Centre",
+      instructions: "Allocate NSI on Delius under Wales -> North Wales Central LDU -> Conwy NSI Team (Llandudno reporting)."
+    },
+    gwyneddAnglesey: {
+      region: "HMPPS Wales",
+      pdu: "North Wales PDU",
+      area: "Gwynedd & Isle of Anglesey (Bangor / Caernarfon / Holyhead)",
+      ldu: "North Wales West LDU Cluster",
+      team: "GWYNEDD_ANGLESEY_NSI",
+      office: "Llandudno / North West Wales Hub",
+      instructions: "Allocate NSI on Delius under Wales -> North Wales West LDU -> Gwynedd & Anglesey NSI Team."
+    },
+
+    // --- ENGLAND ---
+    eng_london_central: {
+      region: "HMPPS London",
+      pdu: "Central & West London PDU",
+      area: "Central & West London Boroughs",
+      ldu: "London Central / West LDU Cluster",
+      team: "LDN_CENTRAL_NSI_HUB",
+      office: "Westminster / Great Peter Street Hub",
+      instructions: "Select Region: London -> Select Borough PDU (e.g., Westminster, Camden, Kensington & Chelsea, Hammersmith) -> Allocate to Local Borough NSI / Interventions Team."
+    },
+    eng_london_north: {
+      region: "HMPPS London",
+      pdu: "North & East London PDU",
+      area: "North & East London Boroughs",
+      ldu: "London North / East LDU Cluster",
+      team: "LDN_NORTHEAST_NSI_HUB",
+      office: "Hackney / Kingsland Road Hub",
+      instructions: "Select Region: London -> Select Borough PDU (e.g., Hackney, Tower Hamlets, Newham, Enfield, Haringey) -> Allocate to Local Borough NSI / Interventions Team."
+    },
+    eng_london_south: {
+      region: "HMPPS London",
+      pdu: "South London PDU",
+      area: "South London Boroughs",
+      ldu: "London South LDU Cluster",
+      team: "LDN_SOUTH_NSI_HUB",
+      office: "Croydon / Dingwall Road Hub",
+      instructions: "Select Region: London -> Select Borough PDU (e.g., Croydon, Lambeth, Southwark, Lewisham, Bromley) -> Allocate to Local Borough NSI / Interventions Team."
+    },
+    eng_gm: {
+      region: "HMPPS Greater Manchester",
+      pdu: "Manchester, Salford & Trafford / GM PDUs",
+      area: "Greater Manchester Combined Authority",
+      ldu: "Greater Manchester LDU Cluster",
+      team: "GM_CENTRAL_NSI_TEAM",
+      office: "Oakland House (Manchester)",
+      instructions: "Select Region: Greater Manchester -> Select local PDU (Manchester, Salford, Bolton, Oldham, Stockport, Wigan) -> Allocate to Local PDU NSI Team."
+    },
+    eng_northwest: {
+      region: "HMPPS North West",
+      pdu: "Merseyside, Cheshire, Lancashire & Cumbria PDUs",
+      area: "North West England",
+      ldu: "North West LDU Cluster",
+      team: "NW_REGIONAL_NSI_TEAM",
+      office: "Burlington House (Liverpool) / Local NW Hub",
+      instructions: "Select Region: North West -> Select County/City PDU (Liverpool, Sefton, Wirral, Cheshire, Lancashire, Cumbria) -> Allocate to Local PDU NSI Team."
+    },
+    eng_northeast: {
+      region: "HMPPS North East",
+      pdu: "Northumbria, Durham & Tees Valley PDUs",
+      area: "North East England",
+      ldu: "North East LDU Cluster",
+      team: "NE_REGIONAL_NSI_TEAM",
+      office: "Swan House (Newcastle) / Local NE Hub",
+      instructions: "Select Region: North East -> Select local PDU (Newcastle, Gateshead, Sunderland, Durham, Stockton/Tees) -> Allocate to Local PDU NSI Team."
+    },
+    eng_yorkshire: {
+      region: "HMPPS Yorkshire & The Humber",
+      pdu: "West, South, North Yorkshire & Humberside PDUs",
+      area: "Yorkshire & The Humber",
+      ldu: "Yorkshire & Humber LDU Cluster",
+      team: "YH_REGIONAL_NSI_TEAM",
+      office: "Cliffords House (Leeds) / Local YH Hub",
+      instructions: "Select Region: Yorkshire & The Humber -> Select local PDU (Leeds, Bradford, Sheffield, Wakefield, Hull, York) -> Allocate to Local PDU NSI Team."
+    },
+    eng_westmidlands: {
+      region: "HMPPS West Midlands",
+      pdu: "Birmingham, Black Country, Coventry, Staffs & West Mercia PDUs",
+      area: "West Midlands (including Shropshire & Herefordshire)",
+      ldu: "West Midlands LDU Cluster",
+      team: "WM_REGIONAL_NSI_TEAM",
+      office: "Birmingham Central Hub / Local WM Hub",
+      instructions: "Select Region: West Midlands -> Select local PDU (Birmingham North/South, Dudley, Wolverhampton, Coventry, Shropshire/Herefordshire) -> Allocate to Local PDU NSI Team."
+    },
+    eng_eastmidlands: {
+      region: "HMPPS East Midlands",
+      pdu: "Nottinghamshire, Derbyshire, Leicestershire & Lincolnshire PDUs",
+      area: "East Midlands",
+      ldu: "East Midlands LDU Cluster",
+      team: "EM_REGIONAL_NSI_TEAM",
+      office: "Castle Marina (Nottingham) / Local EM Hub",
+      instructions: "Select Region: East Midlands -> Select County PDU (Nottinghamshire, Derbyshire, Leicestershire, Northamptonshire, Lincolnshire) -> Allocate to Local PDU NSI Team."
+    },
+    eng_eastengland: {
+      region: "HMPPS East of England",
+      pdu: "Essex, Cambridgeshire, Norfolk, Suffolk, Herts & Beds PDUs",
+      area: "East of England",
+      ldu: "East of England LDU Cluster",
+      team: "EE_REGIONAL_NSI_TEAM",
+      office: "Stuart House (Peterborough) / Local EE Hub",
+      instructions: "Select Region: East of England -> Select County PDU (Essex, Cambridgeshire, Norfolk, Suffolk, Hertfordshire, Bedfordshire) -> Allocate to Local PDU NSI Team."
+    },
+    eng_southwest: {
+      region: "HMPPS South West",
+      pdu: "Bristol, Gloucestershire, Somerset, Devon, Cornwall & Dorset PDUs",
+      area: "South West England",
+      ldu: "South West LDU Cluster",
+      team: "SW_REGIONAL_NSI_TEAM",
+      office: "St Stephens Street (Bristol) / Local SW Hub",
+      instructions: "Select Region: South West -> Select local PDU (Bristol, Gloucestershire, Somerset, Devon & Torbay, Cornwall, Dorset) -> Allocate to Local PDU NSI Team."
+    },
+    eng_southcentral: {
+      region: "HMPPS South Central",
+      pdu: "Thames Valley & Hampshire / Isle of Wight PDUs",
+      area: "South Central England",
+      ldu: "South Central LDU Cluster",
+      team: "SC_REGIONAL_NSI_TEAM",
+      office: "Friars Walk (Reading) / Local SC Hub",
+      instructions: "Select Region: South Central -> Select local PDU (Oxfordshire, Berkshire, Buckinghamshire, Hampshire North/South) -> Allocate to Local PDU NSI Team."
+    },
+    eng_kent_surrey_sussex: {
+      region: "HMPPS Kent, Surrey & Sussex",
+      pdu: "Kent, Surrey & Sussex PDUs",
+      area: "Kent, Surrey & Sussex",
+      ldu: "KSS LDU Cluster",
+      team: "KSS_REGIONAL_NSI_TEAM",
+      office: "Knightrider Street (Maidstone) / Local KSS Hub",
+      instructions: "Select Region: Kent, Surrey & Sussex -> Select County PDU (East/West Kent, Surrey, East/West Sussex) -> Allocate to Local PDU NSI Team."
+    }
+  };
+
+  const deliusForm = document.getElementById('delius-form');
+  const deliusInput = document.getElementById('delius-postcode-input');
+  const deliusErrorSummary = document.getElementById('delius-error-summary');
+  const deliusErrorList = document.getElementById('delius-error-list');
+  const deliusGroup = document.getElementById('delius-postcode-group');
+  const deliusError = document.getElementById('delius-postcode-error');
+  const deliusResult = document.getElementById('delius-result');
+
+  deliusForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    deliusErrorSummary.classList.remove('show');
+    deliusGroup.classList.remove('has-error');
+    deliusError.classList.remove('show');
+
+    const pc = deliusInput.value.trim();
+    if(!pc || !isValidPostcode(pc)){
+      deliusGroup.classList.add('has-error');
+      deliusError.classList.add('show');
+      deliusErrorList.innerHTML = '<li><a href="#delius-postcode-input">Please enter a valid UK postcode.</a></li>';
+      deliusErrorSummary.classList.add('show');
+      return;
+    }
+
+    const key = resolveOfficeKey(pc);
+    const nsiData = deliusNsiMap[key];
+
+    if(!nsiData){
+      deliusErrorList.innerHTML = `<li>No HMPPS England & Wales Delius NSI mapping found for "${pc.toUpperCase()}". Please verify the postcode is in England or Wales.</li>`;
+      deliusErrorSummary.classList.add('show');
+      deliusResult.style.display = 'none';
+      return;
+    }
+
+    document.getElementById('delius-region-name').textContent = nsiData.region;
+    document.getElementById('delius-pdu-name').textContent = nsiData.pdu;
+    document.getElementById('delius-area-name').textContent = nsiData.area;
+    document.getElementById('delius-ldu-name').textContent = nsiData.ldu;
+    document.getElementById('delius-team-name').textContent = nsiData.team;
+    document.getElementById('delius-office-name').textContent = nsiData.office;
+    document.getElementById('delius-instructions').textContent = nsiData.instructions;
+    deliusResult.style.display = 'block';
+  });
+
+  function resetDeliusSearch(){
+    deliusInput.value = '';
+    deliusResult.style.display = 'none';
+    deliusErrorSummary.classList.remove('show');
+  }
+</script>
+</body>
+</html>
